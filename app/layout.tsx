@@ -1,7 +1,6 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
-import Navbar from "@/app/Navbar";
+import { Inter } from "next/font/google";
+import { Metadata } from "next";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,10 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar />
-        <main className='max-w-5xl mt-4 mx-auto'>
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   )
