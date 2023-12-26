@@ -13,7 +13,8 @@ async function postLogin (state: boolean, form: FormData) {
 
   if(res.status == 200) {
     cookies().set('token', (await res.json()).token, {
-      httpOnly: true
+      httpOnly: true,
+      maxAge: 365 * 24 * 60
     })
     redirect('/')
   } else {

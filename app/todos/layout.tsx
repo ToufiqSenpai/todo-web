@@ -9,25 +9,30 @@ export const metadata: Metadata = {
 }
 
 export default async function TodoLayout({
-  children,
+  children
 }: {
   children: React.ReactNode
 }) {
   const token = cookies().get('token')?.value
-  const isLogin = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`, {
+  const authRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`, {
     method: 'GET',
     headers: {
       'Authorization': 'Bearer ' + token
     }
-  }).then(response => response.status == 200)
+  })
 
-  if(!isLogin) redirect('/login')
+  if(authRes.status != 200) redirect('/login')
+
+  const user = await authRes.json()
 
   return (
     <html lang="en">
+      <head>
+        
+      </head>
       <body>
-        <Navbar />
-        <main className='max-w-5xl mt-4 mx-auto'>
+        <Navbar name={user.name} email={user.email} />
+        <main className='max-w-5xl mt-4 mx-auto px-4'>
           {children}
         </main>
       </body>

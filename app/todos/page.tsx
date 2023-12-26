@@ -1,26 +1,32 @@
-'use client'
-import { useState, Suspense } from 'react'
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import AddTask from './AddTask';
-import moment, { Moment } from 'moment';
-import Tasks from './Tasks';
+import moment from 'moment';
+import TodoHeader from './TodoHeader';
+import { cookies } from 'next/headers';
+import TaskRow from './TaskRow';
 
-export default function Home() {
-  const [date, setDate] = useState<Moment>(moment())
+export default async function Home({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+  const date = searchParams.date ? moment(searchParams.date, 'DD-MM-YYYY').toDate() : moment().utc().toDate()
+  const todoRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/todos/${date.toISOString()}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + cookies().get('token').value
+    },
+    next: {
+      tags: ['todo.' + date.toDateString()]
+    }
+  })
+
+  let todo: any = {}
+
+  if(todoRes.status == 200) todo = await todoRes.json()
 
   return (
-    <LocalizationProvider dateAdapter={AdapterMoment}>
-      <div className='flex justify-between items-center'>
-        <DatePicker
-          value={date}
-          onChange={newDate => setDate(newDate)}
-        />
-        <AddTask date={date.toISOString()} />
+    <>
+      <TodoHeader date={date} />
+      <div className='mt-2'>
+        {todo.tasks?.map((task => (
+          <TaskRow key={task._id} todoDate={date} task={task} />
+        )))}
       </div>
-      <Suspense>
-        <Tasks date={date.toISOString()} />
-      </Suspense>
-    </LocalizationProvider>
+    </>
   )
 }

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField }  from "@mui/material"
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { useFormState } from 'react-dom';
-import postTask from './postTask';
+import postTask, { PostTaskState } from './postTask';
 
 type Props = {
   date: string
@@ -11,14 +11,14 @@ type Props = {
 
 function AddTask({ date }: Props) {
   const [open, setOpen] = useState<boolean>(false)
-  const [message, formAction] = useFormState(postTask, null)
+  const [formState, formAction] = useFormState<PostTaskState, FormData>(postTask, { isSucceed: true, message: '' })
   const form = useRef<HTMLFormElement>(null)
 
   const handleClose = () => setOpen(false)
 
   useEffect(() => {
-    if(!message) handleClose()
-  }, [message])
+    if(formState.isSucceed) handleClose()
+  }, [formState])
 
   return (
     <>
@@ -28,14 +28,13 @@ function AddTask({ date }: Props) {
         <DialogContent>
           <form ref={form} action={formAction}>
             <TextField
-              autoFocus
               margin="dense"
               type="text"
               fullWidth
               variant="standard"
               name='task-name'
-              error={Boolean(message)}
-              helperText={message && message}
+              error={!formState.isSucceed}
+              helperText={!formState.isSucceed && formState.message}
             />
             <input type='hidden' name='todo-date' value={date} />
           </form>

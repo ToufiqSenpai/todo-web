@@ -1,31 +1,25 @@
 'use server'
 import { cookies } from "next/headers"
+import { revalidateTag } from "next/cache"
+import moment from "moment"
 
-async function postTask(message: string, form: FormData) {
+export interface PostTaskState {
+  isSucceed: boolean
+  message: string
+}
+
+async function postTask(state: PostTaskState, form: FormData): Promise<PostTaskState> {
   const headers = {
     'Authorization': 'Bearer ' + cookies().get('token')?.value,
     'Content-Type': 'application/json'
   }
   const todoDate = form.get('todo-date')
 
-  const isTodoExist = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/todos/${todoDate}`, {
-    method: 'GET',
+  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/todos`, {
+    method: 'POST',
+    body: JSON.stringify({ date: todoDate }),
     headers
-  }).then(res => res.status != 404)
-
-  createTodo: {
-    if(isTodoExist) break createTodo
-
-    const createTodoRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/todos`, {
-      method: 'POST',
-      body: JSON.stringify({ date: todoDate }),
-      headers
-    })
-
-    if(createTodoRes.status != 201) {
-      return (await createTodoRes.json()).errors.date[0]
-    }
-  }
+  })
 
   const postTaskRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/todos/${todoDate}/tasks`, {
     method: 'POST',
@@ -34,9 +28,10 @@ async function postTask(message: string, form: FormData) {
   })
 
   if(postTaskRes.status == 201) {
-    return null
+    revalidateTag('todo.' + moment(todoDate.toString()).toDate().toDateString())
+    return { isSucceed: true, message: '' }
   } else {
-    return (await postTaskRes.json()).errors.name[0]
+    return { isSucceed: false, message: (await postTaskRes.json()).errors.name[0] }
   }
 }
 
