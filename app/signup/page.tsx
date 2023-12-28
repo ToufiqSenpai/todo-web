@@ -1,56 +1,22 @@
 'use client'
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
 import AlternateEmailRoundedIcon from '@mui/icons-material/AlternateEmailRounded'
 import { InputAdornment, TextField } from '@mui/material'
 import LockIcon from '@mui/icons-material/Lock'
-
-type SignupData = {
-  name: string
-  email: string
-  password: string
-}
+import { useFormState } from 'react-dom'
+import postSignup, { PostSignupState } from './postSignup'
 
 function Signup() {
-  const [data, setData] = useState<SignupData>({
-    name: '',
-    email: '',
-    password: ''
+  const [errors, formAction] = useFormState<PostSignupState, FormData>(postSignup, { 
+    name: '', 
+    email: '', 
+    password: '', 
+    isSucceed: true 
   })
-  const [errors, setErrors] = useState<SignupData>({
-    name: '',
-    email: '',
-    password: ''
-  })
-
-  const { push } = useRouter()
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setData({ ...data, [e.target.id]: e.target.value })
-    setErrors({ ...errors, [e.target.id]: '' })
-  }
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-    e.preventDefault()
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/signup`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": 'application/json'
-      }
-    }).then(response => response.json())
-      .then(response => {
-        if (response.status == 201) {
-          push('/login')
-        } else setErrors(response.errors)
-      })
-  }
 
   return (
-    <form className='max-w-md max-mobile:max-w-[95%] m-auto h-max absolute top-0 bottom-0 left-0 right-0 bg-white shadow-form rounded-lg' onSubmit={handleSubmit}>
+    <form className='max-w-md max-mobile:max-w-[95%] m-auto h-max absolute top-0 bottom-0 left-0 right-0 bg-white shadow-form rounded-lg' action={formAction}>
       <header className='px-3 text-center mt-3'>
         <h1 className='text-2xl font-semibold'>Create an Account</h1>
         <p className='text-sm mt-2'></p>
@@ -61,11 +27,9 @@ function Signup() {
           type='text'
           size='small'
           margin='dense'
-          error={errors.name ? true : false}
-          helperText={errors.name && errors.name[0]}
-          id='name'
-          value={data.name}
-          onChange={handleChange}
+          name='name'
+          error={Boolean(errors.name)}
+          helperText={errors.name && errors.name}
           InputProps={{
             endAdornment: <InputAdornment position='end'><PersonRoundedIcon /></InputAdornment>
           }}
@@ -76,11 +40,9 @@ function Signup() {
           type='email'
           size='small'
           margin='dense'
+          name='email'
           error={Boolean(errors.email)}
-          helperText={errors.email && errors.email[0]}
-          id='email'
-          value={data.email}
-          onChange={handleChange}
+          helperText={errors.email && errors.email}
           InputProps={{
             endAdornment: <InputAdornment position='end'><AlternateEmailRoundedIcon /></InputAdornment>
           }}
@@ -91,11 +53,9 @@ function Signup() {
           type='password'
           size='small'
           margin='dense'
+          name='password'
           error={Boolean(errors.password)}
-          helperText={errors.password && errors.password[0]}
-          id='password'
-          value={data.password}
-          onChange={handleChange}
+          helperText={errors.password && errors.password}
           InputProps={{
             endAdornment: <InputAdornment position='end'><LockIcon /></InputAdornment>
           }}
